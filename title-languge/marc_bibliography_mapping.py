@@ -1,4 +1,4 @@
-marc_field_mapping_bibliographic = {
+marc_field_mapping_bibliographic_flat = {
 
     # Leader and Control Fields
     '000': '000-Leader',
