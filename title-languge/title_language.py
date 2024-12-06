@@ -94,7 +94,7 @@ if uploaded_file is not None:
 st.title('Title and Language Analysis')
 st.write("To effectively utilize the bibliographic data from MARC 21, we aim to clean the dataset concerning titles and languages. This dataset includes fields such as '008 - Fixed-Length Data Elements - General Information,' '040\$b - Language of Cataloging,' '041\$a - Language Code of Text,' '546\$a - Language Note,' '245\$a - Title,' '245\$b - Remainder of Title,' '245\$c - Statement of Responsibility,' '245\$f - Inclusive Dates,' '245\$n,' and '245\$p - Name of Part/Section of Work.' Currently, the information is dispersed across different columns, making it challenging to identify the correct data. The primary goal of this project is to organize the title and language columns to facilitate analysis by Family Search.")
 
-st.header('Language columns Clean')
+st.header('Clean Language Columns')
 st.write("The '008 - Fixed-Length Data Elements - General Information' field provides language information in positions 35 to 37. When multiple languages are indicated in the '008' field, only the '041\$a - Language Code of Text' field is used to represent these languages. The combined '008' and '041' fields are used when multiple languages are present in '008,' as these languages are relevant for family search purposes.")
 # %%
 df1 = df[['008-Fixed-Length Data Elements-General Information','040$b-Language of cataloging', '041$a-Language code of text','546$a-Language note', '245$a-Title', '245$b-Remainder of title']]
@@ -123,7 +123,7 @@ st.write ("The table shows that the top five languages used are English, French,
 st.dataframe(result1.head())
 
 # %%
-st.header('Title columns Clean')
+st.header('Clean Title Columns')
 st.write("The 245\$a - Title and 245\$b - Remainder of Title fields display the title and subtitle. These fields were combined and then split by the delimiter '=' to create separate columns for each value, organizing the information effectively. The langid library was used to determine the language used in the title. This library use different way to detect the lanague with MARC21.")
 
 # %% combined 245a and 245b (title and subtitle)
@@ -145,7 +145,7 @@ def split_title(df, col_name, delimiter):
     return df
 
 df1 = split_title(df1, '245$ab', r'=')
-st.subheader("DataFrame with title split parts:")
+st.subheader("DataFrame with Split Title Parts:")
 st.dataframe(df1.head())
 # %%
 import langid
@@ -260,14 +260,6 @@ st.dataframe(title_lan.head())
 
 # %%
 st.header('Analysis of Language and title')
-st.markdown("""We identified four cases: 
-    <ul>
-    <li>1. Language and title match. </li>
-    <li>2. Cases with multiple languages in the language column but not in the title. </li>
-    <li>3. Cases with multiple languages in the title but not in the language column. </li>
-    <li>4. Cases where languages differ between the language and title columns.</li>
-    </ul>""", unsafe_allow_html=True)
-
 # %%
 # List of the columns you're interested in
 title_cols = [col for col in df1.columns if '245$ab_part' in col and '_lan' in col]
@@ -341,17 +333,24 @@ df1['mul-title'] = df1['mul-title'].apply(clean_none).fillna('None').replace('',
 # %%
 # Create a column to check if both 'language_245' and 'language_008+041' are matching
 df1['both_matching'] = (df1['mul-Language'] == 'None') & (df1['mul-title'] == 'None')
+df1['both_matching'] = df1['both_matching'].apply(lambda x: 'True' if x else 'False')
 
 # %% Find the cases
 filtered = df1[['245$a-Title', 'both_matching','matching_value', 'mul-Language', 'mul-title']]
 
-case1 = filtered[filtered['both_matching'] == True]
-case2 = filtered[(filtered['mul-title']== "None") & (filtered['both_matching'] == False)] 
-case3 = filtered[(filtered['mul-Language']== "None") & (filtered['both_matching'] == False)] 
+case1 = filtered[filtered['both_matching'] == 'True']
+case2 = filtered[(filtered['mul-title']== "None") & (filtered['both_matching'] == 'False')] 
+case3 = filtered[(filtered['mul-Language']== "None") & (filtered['both_matching'] == 'False')] 
 case4 = filtered[(filtered['mul-title'] != 'None') & (filtered['mul-Language'] != 'None') ] 
-
 # %%
 st.subheader("Result Table:")
+st.markdown("""We identified four cases: 
+    <ul>
+    <li>1. Language and title match. </li>
+    <li>2. Cases with multiple languages in the language column but not in the title. </li>
+    <li>3. Cases with multiple languages in the title but not in the language column. </li>
+    <li>4. Cases where languages differ between the language and title columns.</li>
+    </ul>""", unsafe_allow_html=True)
 tab1, tab2, tab3, tab4 = st.tabs(['Case1' , 'Case2', 'Case3','Case4'])
 tab1.dataframe(case1)
 tab2.dataframe(case2)
@@ -424,3 +423,5 @@ st.download_button(
     file_name="output_cases.xlsx",
     mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
 )
+
+# %% 

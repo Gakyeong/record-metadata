@@ -271,27 +271,8 @@ if uploaded_file is not None:
 
     st.subheader("Language count table for title:")
     st.dataframe(title_lan.head())
-    # %% ????
-    # page_size = 20
-    # num_pages = len(title_lan) // page_size + 1
-
-    # page = st.slider("Select Page", 1, num_pages, 1)
-
-    # start_row = (page - 1) * page_size
-    # end_row = start_row + page_size
-
-    # st.dataframe(title_lan.iloc[start_row:end_row])
-
     # %%
     st.header('Analysis of Language and title')
-    st.markdown("""We identified four cases: 
-        <ul>
-        <li>1. Language and title match. </li>
-        <li>2. Cases with multiple languages in the language column but not in the title. </li>
-        <li>3. Cases with multiple languages in the title but not in the language column. </li>
-        <li>4. Cases where languages differ between the language and title columns.</li>
-        </ul>""", unsafe_allow_html=True)
-
     # %%
     # List of the columns you're interested in
     title_cols = [col for col in df1.columns if '245$ab_part' in col and '_lan' in col]
@@ -365,17 +346,25 @@ if uploaded_file is not None:
     # %%
     # Create a column to check if both 'language_245' and 'language_008+041' are matching
     df1['both_matching'] = (df1['mul-Language'] == 'None') & (df1['mul-title'] == 'None')
+    df1['both_matching'] = df1['both_matching'].apply(lambda x: 'True' if x else 'False')
 
     # %% Find the cases
     filtered = df1[['245$a-Title', 'both_matching','matching_value', 'mul-Language', 'mul-title']]
 
-    case1 = filtered[filtered['both_matching'] == True]
-    case2 = filtered[(filtered['mul-title']== "None") & (filtered['both_matching'] == False)] 
-    case3 = filtered[(filtered['mul-Language']== "None") & (filtered['both_matching'] == False)] 
+    case1 = filtered[filtered['both_matching'] == 'True']
+    case2 = filtered[(filtered['mul-title']== "None") & (filtered['both_matching'] == 'False')] 
+    case3 = filtered[(filtered['mul-Language']== "None") & (filtered['both_matching'] == 'False')] 
     case4 = filtered[(filtered['mul-title'] != 'None') & (filtered['mul-Language'] != 'None') ] 
-
     # %%
     st.subheader("Result Table:")
+    st.markdown("""We identified four cases: 
+    <ul>
+    <li>1. Language and title match. </li>
+    <li>2. Cases with multiple languages in the language column but not in the title. </li>
+    <li>3. Cases with multiple languages in the title but not in the language column. </li>
+    <li>4. Cases where languages differ between the language and title columns.</li>
+    </ul>""", unsafe_allow_html=True)
+    
     tab1, tab2, tab3, tab4 = st.tabs(['Case1' , 'Case2', 'Case3','Case4'])
     tab1.dataframe(case1)
     tab2.dataframe(case2)
@@ -437,3 +426,4 @@ if uploaded_file is not None:
         file_name="output_cases.csv",
         mime="text/csv"
     )
+#%%
